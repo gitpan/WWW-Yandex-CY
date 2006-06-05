@@ -2,7 +2,7 @@ package WWW::Yandex::CY;
 use 5.008008;
 use strict;
 use warnings;
-our $VERSION = '1.00';
+our $VERSION = '1.10';
 
 # Preloaded methods go here.
 use LWP::UserAgent;
@@ -14,6 +14,9 @@ sub new {
   my $class = ref($proto) || $proto;
   my $self  = {};
   $self->{SITE} = "http://jobs.su";
+  $self->{TIMEOUT} = "30";
+  $self->{PROXY} = undef;
+  $self->{AGENT} = "Grep Yandex CY 1.10";
   bless($self, $class);
   return $self;
 }
@@ -23,18 +26,43 @@ sub site {
   my $self = shift;
   if (@_) { $self->{SITE} = shift }
   return $self->{SITE};
-
 }
 
+
+sub timeout {
+  my $self = shift;
+  if (@_) { $self->{TIMEOUT} = shift }
+  return $self->{TIMEOUT};
+}
+
+sub proxy {
+  my $self = shift;
+  if (@_) { $self->{PROXY} = shift }
+  return $self->{PROXY};
+}
+
+sub agent {
+  my $self = shift;
+  if (@_) { $self->{AGENT} = shift }
+  return $self->{AGENT};
+}
 
 sub print {
 	my $self = shift;
 	my $site = $self->site;
-
+	my $timeout = $self->timeout;
+	my $proxy = $self->proxy;
+	my $agent = $self->agent;
 
 	#GET URL
-	$lwp->timeout(30);
-	$lwp->agent('Mozilla/4.0');
+	$lwp->timeout("$timeout");
+
+	if ($proxy){
+		$lwp->proxy(['http'], "http://djs:dfhevdfhev\@cache.xproxy.ru:3128");
+	}
+
+	$lwp->agent("$agent");
+
 	my $response = $lwp->get( "http://bar-navig.yandex.ru/u?ver=2&url=$site&show=1&thc=0");
 
 	my @result;
@@ -70,17 +98,48 @@ WWW::Yandex::CY - Yandex Thematic Index of Citing (TIC) for domain
 
 =head1 SYNOPSIS
 
-	use WWW::Yandex::CY;
+	# Default
+
+    #!/usr/bin/perl
+    use strict;
+    use WWW::Yandex::CY;
 	my $cy = WWW::Yandex::CY->new();
 	$cy->site('http://jobs.su');
 	my $get_cy = $cy->print();
 	print $get_cy;
 
 
+	# Obtaining through proxy
+
+    #!/usr/bin/perl
+    use strict;
+    use WWW::Yandex::CY;
+	my $cy = WWW::Yandex::CY->new();
+	$cy->site('http://jobs.su');
+	$cy->timeout('30');
+	$cy->proxy('http://login:password\@server:port');
+	$cy->agent('Mozilla/4.0');
+	my $get_cy = $cy->print();
+	print $get_cy;
+
+
+
 =head1 DESCRIPTION
 
 The C<WWW::Yandex::CY> is a class implementing a interface for
 querying Yandex Thematic Index of Citing (TIC) for domain.
+
+Obtaining domain value
+$cy->site('http://domain.ru');
+
+Timeout (value in seconds) Default = 30 seconds
+$cy->timeout('30');
+
+Proxy (Obtaining through proxy) Default = undef
+$cy->proxy('http://login:password\@server:port');
+
+User Agent Default = Grep Yandex CY 2.0
+$cy->agent('Mozilla/4.0');
 
 =head1 AUTHOR
 
